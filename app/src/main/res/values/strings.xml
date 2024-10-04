@@ -1,0 +1,6 @@
+<resources>
+    <!-- Other existing strings -->
+    <string name="app_name">OpenTranscribe</string>
+    <string name="accessibility_service_description">This service allows real-time extraction of transcriptions from Live Transcribe for use in AR glasses.</string>
+</resources>
+
