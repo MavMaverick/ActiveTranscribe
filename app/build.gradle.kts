@@ -56,4 +56,9 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    // OkHttp - WebSocket client
+    implementation("com.squareup.okhttp3:okhttp:4.9.3") // OkHttp for WebSocket
+
+    // Optionally, you may add a JSON parsing library, e.g., Moshi for handling structured data
+    implementation("com.squareup.moshi:moshi:1.12.0")
 }
