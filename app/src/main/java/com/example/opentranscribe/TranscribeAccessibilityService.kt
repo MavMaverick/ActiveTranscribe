@@ -19,6 +19,10 @@ class TranscribeAccessibilityService : AccessibilityService() {
     }
 
     private var lastExtractedText: String? = null // To store the last extracted text for comparison
+
+    private var newLines: List<String>? = null // To store the last 3 current last lines
+    private var oldLines: List<String>? = null // To store the last 3 previous last lines
+
     private lateinit var webSocket: WebSocket // WebSocket to handle communication with server
 
     // Called when the service is created, used to set up WebSocket
@@ -32,7 +36,7 @@ class TranscribeAccessibilityService : AccessibilityService() {
 
         // Building WebSocket request with the specified server URL
         val request = Request.Builder()
-            .url("ws://192.168.0.108:8080") // WebSocket server URL
+            .url("ws://192.168.0.52:8080") // WebSocket server URL
             .build()
 
         // Initializing WebSocket connection
@@ -50,11 +54,11 @@ class TranscribeAccessibilityService : AccessibilityService() {
         // Filtering for events only from the Live Transcribe app package
         val packageName = event.packageName?.toString()
         if (packageName != "com.google.audio.hearing.visualization.accessibility.scribe") {
-            Log.d(TAG, "Ignoring event from package: $packageName")
+//            Log.d(TAG, "Ignoring event from package: $packageName")
             return
         }
 
-        Log.d(TAG, "onAccessibilityEvent triggered for Live Transcribe.")
+//        Log.d(TAG, "onAccessibilityEvent triggered for Live Transcribe.")
 
         // Accessing the root node of the active window (UI hierarchy)
         val rootNode = rootInActiveWindow
@@ -63,7 +67,7 @@ class TranscribeAccessibilityService : AccessibilityService() {
             return
         }
 
-        Log.d(TAG, "Root node accessed successfully.")
+//        Log.d(TAG, "Root node accessed successfully.")
 
         // Searching for the target node that contains the transcription text
         val targetNode = findTextNode(rootNode)
@@ -71,14 +75,116 @@ class TranscribeAccessibilityService : AccessibilityService() {
             // Extracting text from the found node
             val extractedText = targetNode.text?.toString()
 
+
             // Sending the text via WebSocket if it's different from the last extracted text
+            // Necessary because there's spam output of the same thing and we only want
+            // new output, this 'filters' that
             if (extractedText != lastExtractedText) {
+
+//                Log.d(TAG, "Extracted Text: $extractedText")
+
                 lastExtractedText = extractedText // Updating last extracted text
+                // This should take the string, which will contain \n\n between lines, and make
+                // them into a string list only containing the useful strings, no empty ones.
+                val extractedLines = extractedText?.split("\n\n")
 
-                Log.d(TAG, "Extracted Text: $extractedText")
+                // Only keep the last 3 lines if they exist, this is to prevent processing
+                // massive transcript histories captured by the ASR.
+                val last3Lines = extractedLines?.takeLast(3)
+                // This removes any whitespace from the string list items.
+                val last3LinesTrimmed = last3Lines?.map { it.trim() }
+                // Get the last non-empty element in the string list
 
-                // Sending the extracted text to WebSocket
-                webSocket.send(extractedText ?: "")
+                // update newLines with  current ASR output lines
+                newLines = last3LinesTrimmed
+
+                // if oldLines exist, compare against newLines
+                if (oldLines != null && newLines != null){
+                    val lines = oldLines
+                    val lines2 = newLines
+                    if (lines != null && lines.size >= 2 && lines2 != null) {
+//                        Log.d(TAG, "IF CHECK PASSED")
+
+                        val oldElement = lines[lines.size - 1]
+                        val newElement = lines2[lines2.size - 2]
+                        val curElement = lines2[lines2.size - 1]
+
+                        if (oldElement != newElement) { // for generating text
+//                            Log.d(TAG, "Generating")
+                            Log.d(TAG, "GENERATING: $curElement")
+                            oldLines = newLines
+
+                            val lastLineItem = curElement
+
+                            // Create the JSON object in a string format
+                            val jsonMessage = """
+                                {
+                                    "flag": "GEN",
+                                    "content": "$lastLineItem"
+                                }
+                            """.trimIndent()
+
+                            // Send the JSON object as a string through the WebSocket
+                            webSocket.send(jsonMessage)
+                        } else { // for finalized text
+
+                            oldLines = newLines
+                            val lastLineItem = curElement
+
+                            // Log the final line item
+                            Log.d(TAG, "FINALIZATION: $lastLineItem\n\n")
+
+                            // Create the JSON object in a string format
+                            val jsonMessage = """
+                                {
+                                    "flag": "FIN",
+                                    "content": "$lastLineItem"
+                                }
+                            """.trimIndent()
+
+                            // Send the JSON object as a string through the WebSocket
+                            webSocket.send(jsonMessage)
+
+                        }
+
+                    } else { // if oldlines isnt 2 lines yet
+                        // new becomes old, update string list oldLines
+                        oldLines = newLines
+                        val lastLineItem = newLines?.lastOrNull()
+                        Log.d(TAG, "NO 2ND LN: $lastLineItem")
+                        // Create the JSON object in a string format
+                        val jsonMessage = """
+                                {
+                                    "flag": "GEN",
+                                    "content": "$lastLineItem"
+                                }
+                            """.trimIndent()
+
+                        // Send the JSON object as a string through the WebSocket
+                        webSocket.send(jsonMessage)
+                    }
+
+                } else{  // if oldLines don't exist, just send last line of current lines
+
+
+                    // new becomes old, update string list oldLines
+                    oldLines = newLines
+                    val lastLineItem = newLines?.lastOrNull()
+                    Log.d(TAG, "2ND NT EXIST$lastLineItem")
+                    // Create the JSON object in a string format
+                    val jsonMessage = """
+                                {
+                                    "flag": "GEN",
+                                    "content": "$lastLineItem"
+                                }
+                            """.trimIndent()
+
+                    // Send the JSON object as a string through the WebSocket
+                    webSocket.send(jsonMessage)
+
+                }
+
+
             }
         } else {
             Log.d(TAG, "No text node found with non-empty content.")
