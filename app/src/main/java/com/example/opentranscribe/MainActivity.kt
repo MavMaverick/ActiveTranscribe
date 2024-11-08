@@ -1,14 +1,17 @@
 package com.example.opentranscribe
 
 import android.os.Bundle
+import android.content.Intent
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.opentranscribe.ui.theme.OpenTranscribeTheme
@@ -16,14 +19,10 @@ import com.example.opentranscribe.ui.theme.OpenTranscribeTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
             OpenTranscribeTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                    MainScreen(modifier = Modifier.padding(innerPadding))
                 }
             }
         }
@@ -31,17 +30,28 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Heeello $name!",
-        modifier = modifier
-    )
+fun AccessibilityButton() {
+    val context = LocalContext.current
+
+    Button(onClick = {
+        // Intent to open the Accessibility Settings
+        val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+        context.startActivity(intent)
+    }) {
+        Text("Turn on")
+    }
+}
+
+@Composable
+fun MainScreen(modifier: Modifier = Modifier) {
+    AccessibilityButton()
+    // Other UI components can be added here
 }
 
 @Preview(showBackground = true)
 @Composable
-fun GreetingPreview() {
+fun MainScreenPreview() {
     OpenTranscribeTheme {
-        Greeting("Android")
+        MainScreen()
     }
 }
