@@ -18,14 +18,13 @@ class TranscribeAccessibilityService : AccessibilityService() {
         const val TAG = "TranscribeService" // Logging tag for the service
     }
 
-    private var lastExtractedText: String? = null // To store the last extracted text for comparison
+    private var lastExtractedText: String? = null // Stores the last extracted text to prevent duplicate sending
+    private var newLines: List<String>? = null // Stores the last 3 lines of current text
+    private var oldLines: List<String>? = null // Stores the previous 3 lines for comparison
 
-    private var newLines: List<String>? = null // To store the last 3 current last lines
-    private var oldLines: List<String>? = null // To store the last 3 previous last lines
+    private lateinit var webSocket: WebSocket // WebSocket instance for server communication
 
-    private lateinit var webSocket: WebSocket // WebSocket to handle communication with server
-
-    // Called when the service is created, used to set up WebSocket
+    // Initializes the WebSocket connection on service creation
     override fun onCreate() {
         super.onCreate()
 
@@ -34,47 +33,44 @@ class TranscribeAccessibilityService : AccessibilityService() {
             .readTimeout(3, TimeUnit.SECONDS)
             .build()
 
-        // Building WebSocket request with the specified server URL
+        // Build and initialize WebSocket with the target server URL
         val request = Request.Builder()
-            .url("ws://192.168.0.52:8080") // WebSocket server URL
+            .url("ws://192.168.0.52:8080") // Replace with actual WebSocket server URL
+            // 192.168.0.52, replace with your laptops IP
+            // replace :8080 with the port you want to use or leave it alone
+            // Don't forget to also change WebSocket URL in res/xml/network_security_config.xml
+            // Don't forget to change the server.js URL as well (the file isn't in this repo)
             .build()
-
-        // Initializing WebSocket connection
         webSocket = client.newWebSocket(request, WebSocketListenerImpl())
     }
 
-    // Called when an accessibility event occurs
+    // Handles accessibility events triggered by other applications
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        // Check if the event is null
+        // Ensure event is non-null
         if (event == null) {
             Log.d(TAG, "Received null event.")
             return
         }
 
-        // Filtering for events only from the Live Transcribe app package
+        // Process only events from the Live Transcribe app package
         val packageName = event.packageName?.toString()
         if (packageName != "com.google.audio.hearing.visualization.accessibility.scribe") {
             Log.d(TAG, "Ignoring event from package: $packageName")
             return
         }
 
-//        Log.d(TAG, "onAccessibilityEvent triggered for Live Transcribe.")
-
-        // Accessing the root node of the active window (UI hierarchy)
+        // Retrieve the root node of the active window's UI hierarchy
         val rootNode = rootInActiveWindow
         if (rootNode == null) {
             Log.d(TAG, "Root node is null.")
             return
         }
 
-//        Log.d(TAG, "Root node accessed successfully.")
-
         // Searching for the target node that contains the transcription text
         val targetNode = findTextNode(rootNode)
         if (targetNode != null) {
             // Extracting text from the found node
             val extractedText = targetNode.text?.toString()
-
 
             // Sending the text via WebSocket if it's different from the last extracted text
             // Necessary because there's spam output of the same thing and we only want
@@ -97,92 +93,86 @@ class TranscribeAccessibilityService : AccessibilityService() {
                 newLines = last3LinesTrimmed
 
                 // if oldLines exist, compare against newLines. The reason we check for oldLines is
-                // because we to to be able to compare to know if
+                // because we to to be able to compare to know if the ASR is still generating, or
+                // if it has finished.
                 if (oldLines != null && newLines != null){
-                    val lines = oldLines
-                    val lines2 = newLines
-                    if (lines != null && lines.size >= 2 && lines2 != null) {
+                    // Smart casting here instead of forcing !!
+                    val smartOldLines = oldLines
+                    val smartNewLines = newLines
+                    // if two or more smartOldLines exist
+                    if (smartOldLines != null && smartOldLines.size >= 2 && smartNewLines != null) {
 //                        Log.d(TAG, "IF CHECK PASSED")
+                        val oldElement = smartOldLines[smartOldLines.size - 1]
+                        val newElement = smartNewLines[smartNewLines.size - 2]
+                        val curElement = smartNewLines[smartNewLines.size - 1]
+                        /*
+                                    oldLines (last three lines as of previous extraction)
+                        [-2] Sure. Sounds good. What time do you have in mind?
+                        [-1] I was thinking around 6 p.m the weather should be cool
 
-                        val oldElement = lines[lines.size - 1]
-                        val newElement = lines2[lines2.size - 2]
-                        val curElement = lines2[lines2.size - 1]
+                                    newLines (current three lines as of the current extraction)
+                        [-3] Sure. Sounds good. What time do you have in mind?
+                        [-2] I was thinking around 6 p.m the weather should be cool.
+                        [-1] Awesome
 
-                        if (oldElement != newElement) { // for generating text
+                        We compare if oldElement[-1] != newElement[-2], and if they match, we know
+                        the ASR is generating and not finalized. By checking against the previous
+                        line we always have a way of knowing when a line is done or not; generating
+                        or finalized. Because of this, at the very start when we have no oldLines,
+                        I have defaulted to using flag GEN (even if it should be FIN) for when no
+                        oldLines, and when oldLines < 2; need to fix but not worried about it.
+                        Speak twice, with pauses, so two 'final' lines (with line-breaks) appear
+                        on Google's Live Transcribe App screen which will then populate oldLines
+                        which will fix the problem for the rest of the session.
+
+                        NOTE: My code doesn't use all three lines but I trim down to 3 just in case.
+                         */
+
+                        // so we know it is still generating.
+                        if (oldElement != newElement) {
 //                            Log.d(TAG, "Generating")
                             Log.d(TAG, "GENERATING: $curElement")
+                            sendMessage(curElement, "GEN")
                             oldLines = newLines
 
-                            val lastLineItem = curElement
-
-                            // Create the JSON object in a string format
-                            val jsonMessage = """
-                                {
-                                    "flag": "GEN",
-                                    "content": "$lastLineItem"
-                                }
-                            """.trimIndent()
-
-                            // Send the JSON object as a string through the WebSocket
-                            webSocket.send(jsonMessage)
-                        } else { // for finalized text
-
+                        // Because oldElement is different, this means the ASR has added a new line
+                        // because it finished generating text, meaning we know it is finished.
+                        } else {
                             oldLines = newLines
-                            val lastLineItem = curElement
-
                             // Log the final line item
-                            Log.d(TAG, "FINALIZATION: $lastLineItem\n\n")
-
-                            // Create the JSON object in a string format
-                            val jsonMessage = """
-                                {
-                                    "flag": "FIN",
-                                    "content": "$lastLineItem"
-                                }
-                            """.trimIndent()
-
-                            // Send the JSON object as a string through the WebSocket
-                            webSocket.send(jsonMessage)
-
+                            Log.d(TAG, "FINALIZATION: $curElement\n\n")
+                            sendMessage(curElement, "FIN")
                         }
-
-                    } else { // if oldlines isnt 2 lines yet
+                    // This occurs when oldLines doesn't have enough lines (2) for us to compare to
+                    // know if we are still generating a line, or finalized.
+                    } else {
                         // new becomes old, update string list oldLines
                         oldLines = newLines
-                        val lastLineItem = newLines?.lastOrNull()
-                        Log.d(TAG, "NO 2ND LN: $lastLineItem")
-                        // Create the JSON object in a string format
-                        val jsonMessage = """
-                                {
-                                    "flag": "GEN",
-                                    "content": "$lastLineItem"
-                                }
-                            """.trimIndent()
-
-                        // Send the JSON object as a string through the WebSocket
-                        webSocket.send(jsonMessage)
+                        Log.d(TAG, "PREV < 2: ${newLines?.lastOrNull()}")
+                        sendMessage(newLines?.lastOrNull(), "GEN")
                     }
-                } else{  // if oldLines don't exist, just send last line of current lines
-
-                    // new becomes old, update string list oldLines
+                // This happens typically right at the start of extraction when there's no text.
+                // Just send last line, or NULL, of newLines.
+                } else{
                     oldLines = newLines
-                    val lastLineItem = newLines?.lastOrNull()
-                    Log.d(TAG, "2ND NT EXIST$lastLineItem")
-                    // Create the JSON object in a string format
-                    val jsonMessage = """
-                                {
-                                    "flag": "GEN",
-                                    "content": "$lastLineItem"
-                                }
-                            """.trimIndent()
-
-                    // Send the JSON object as a string through the WebSocket
-                    webSocket.send(jsonMessage)
-
+                    Log.d(TAG, "NO PREV: ${newLines?.lastOrNull()}")
+                    sendMessage(newLines?.lastOrNull(), "GEN")
                 }
             }
         } else {
             Log.d(TAG, "No text node found with non-empty content.")
+        }
+    }
+    // This helps reduce redundant json packaging code by making it a function.
+    private fun sendMessage(content: String?, flag: String) {
+        content?.let {
+            val jsonMessage = """
+                {
+                    "flag": "$flag",
+                    "content": "$content"
+                }
+            """.trimIndent()
+            webSocket.send(jsonMessage)
         }
     }
 
