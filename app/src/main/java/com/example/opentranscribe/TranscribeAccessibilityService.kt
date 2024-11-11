@@ -54,7 +54,7 @@ class TranscribeAccessibilityService : AccessibilityService() {
         // Filtering for events only from the Live Transcribe app package
         val packageName = event.packageName?.toString()
         if (packageName != "com.google.audio.hearing.visualization.accessibility.scribe") {
-//            Log.d(TAG, "Ignoring event from package: $packageName")
+            Log.d(TAG, "Ignoring event from package: $packageName")
             return
         }
 
@@ -80,7 +80,6 @@ class TranscribeAccessibilityService : AccessibilityService() {
             // Necessary because there's spam output of the same thing and we only want
             // new output, this 'filters' that
             if (extractedText != lastExtractedText) {
-
 //                Log.d(TAG, "Extracted Text: $extractedText")
 
                 lastExtractedText = extractedText // Updating last extracted text
@@ -94,11 +93,11 @@ class TranscribeAccessibilityService : AccessibilityService() {
                 // This removes any whitespace from the string list items.
                 val last3LinesTrimmed = last3Lines?.map { it.trim() }
                 // Get the last non-empty element in the string list
-
                 // update newLines with  current ASR output lines
                 newLines = last3LinesTrimmed
 
-                // if oldLines exist, compare against newLines
+                // if oldLines exist, compare against newLines. The reason we check for oldLines is
+                // because we to to be able to compare to know if
                 if (oldLines != null && newLines != null){
                     val lines = oldLines
                     val lines2 = newLines
@@ -163,9 +162,7 @@ class TranscribeAccessibilityService : AccessibilityService() {
                         // Send the JSON object as a string through the WebSocket
                         webSocket.send(jsonMessage)
                     }
-
                 } else{  // if oldLines don't exist, just send last line of current lines
-
 
                     // new becomes old, update string list oldLines
                     oldLines = newLines
@@ -183,8 +180,6 @@ class TranscribeAccessibilityService : AccessibilityService() {
                     webSocket.send(jsonMessage)
 
                 }
-
-
             }
         } else {
             Log.d(TAG, "No text node found with non-empty content.")
