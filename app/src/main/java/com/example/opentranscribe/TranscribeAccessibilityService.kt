@@ -55,7 +55,7 @@ class TranscribeAccessibilityService : AccessibilityService() {
         // Process only events from the Live Transcribe app package
         val packageName = event.packageName?.toString()
         if (packageName != "com.google.audio.hearing.visualization.accessibility.scribe") {
-            Log.d(TAG, "Ignoring event from package: $packageName")
+//            Log.d(TAG, "Ignoring event from package: $packageName")
             return
         }
 
@@ -140,7 +140,8 @@ class TranscribeAccessibilityService : AccessibilityService() {
                         } else {
                             oldLines = newLines
                             // Log the final line item
-                            Log.d(TAG, "FINALIZATION: $curElement\n\n")
+                            Log.d(TAG, "FINALIZATION: $oldElement\n\n")
+                            Log.d(TAG, "NEXT GENERATION: $curElement")
                             sendMessage(curElement, "FIN")
                         }
                     // This occurs when oldLines doesn't have enough lines (2) for us to compare to
