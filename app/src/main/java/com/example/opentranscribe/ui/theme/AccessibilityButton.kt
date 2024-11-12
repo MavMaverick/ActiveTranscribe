@@ -8,23 +8,46 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.Alignment
+
 
 @Composable
 fun AccessibilityButton() {
     val context = LocalContext.current
 
-    Button(
-        onClick = {
-            // Intent to open the Accessibility Settings
-            val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-            context.startActivity(intent)
-        },
-        modifier = Modifier
-            .width(200.dp) // Set custom width
-            .height(60.dp) // Set custom height
+    Row(
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text("Turn on")
+        // Button to open Accessibility Settings
+        Button(
+            onClick = {
+                val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                context.startActivity(intent)
+            },
+            modifier = Modifier
+                .width(200.dp)
+                .height(60.dp)
+        ) {
+            Text("Turn on")
+        }
+
+        Spacer(modifier = Modifier.size(16.dp)) // Spacer between buttons
+
+        // Button to clear cache
+        Button(
+            onClick = {
+                clearAppCache(context)
+            },
+            modifier = Modifier
+                .width(200.dp)
+                .height(60.dp)
+        ) {
+            Text("Clear Cache")
+        }
     }
 }
