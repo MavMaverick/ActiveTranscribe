@@ -70,8 +70,9 @@ class MainActivity : ComponentActivity() {
             discoveredGlasses.connect(
                 { glasses ->
                     Log.e("CONNECT", "Glasses connecting")
+                    glasses.clear()
                     // Display a test message on the glasses
-                    glasses.txt(Point(50, 50), Rotation.TOP_LR, 0x00.toByte(), 0xFF.toByte(), "Mon Super Test")
+                    glasses.txt(Point(1, 50), Rotation.TOP_LR, 0x00.toByte(), 0xFF.toByte(), "Mon Super Test")
                     Log.e("CONNECT", "Glasses connected")
                     // Draw a circle at the center of the screen
                 },

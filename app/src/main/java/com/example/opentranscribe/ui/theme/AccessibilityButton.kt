@@ -31,7 +31,7 @@ fun AccessibilityButton() {
             },
             modifier = Modifier
                 .width(200.dp)
-                .height(60.dp)
+                .height(200.dp)
         ) {
             Text("Turn on")
         }
