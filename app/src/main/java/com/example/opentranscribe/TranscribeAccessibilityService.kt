@@ -5,12 +5,6 @@ import android.accessibilityservice.AccessibilityService
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.WebSocket
-import okhttp3.WebSocketListener
-import okio.ByteString
-import java.util.concurrent.TimeUnit
 
 class TranscribeAccessibilityService : AccessibilityService() {
 
@@ -18,31 +12,11 @@ class TranscribeAccessibilityService : AccessibilityService() {
         const val TAG = "TranscribeService" // Logging tag for the service
     }
 
-    private var lastExtractedText: String? = null // Stores the last extracted text to prevent duplicate sending
+    private var lastExtractedText: String? =
+        null // Stores the last extracted text to prevent duplicate sending
     private var newLines: List<String>? = null // Stores the last 3 lines of current text
     private var oldLines: List<String>? = null // Stores the previous 3 lines for comparison
 
-    private lateinit var webSocket: WebSocket // WebSocket instance for server communication
-
-    // Initializes the WebSocket connection on service creation
-    override fun onCreate() {
-        super.onCreate()
-
-        // Setting up OkHttp WebSocket client with 3 seconds read timeout
-        val client = OkHttpClient.Builder()
-            .readTimeout(3, TimeUnit.SECONDS)
-            .build()
-
-        // Build and initialize WebSocket with the target server URL
-        val request = Request.Builder()
-            .url("ws://192.168.0.52:8080") // Replace with actual WebSocket server URL
-            // 192.168.0.52, replace with your laptops IP
-            // replace :8080 with the port you want to use or leave it alone
-            // Don't forget to also change WebSocket URL in res/xml/network_security_config.xml
-            // Don't forget to change the server.js URL as well (the file isn't in this repo)
-            .build()
-        webSocket = client.newWebSocket(request, WebSocketListenerImpl())
-    }
 
     // Handles accessibility events triggered by other applications
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
@@ -95,7 +69,7 @@ class TranscribeAccessibilityService : AccessibilityService() {
                 // if oldLines exist, compare against newLines. The reason we check for oldLines is
                 // because we to to be able to compare to know if the ASR is still generating, or
                 // if it has finished.
-                if (oldLines != null && newLines != null){
+                if (oldLines != null && newLines != null) {
                     // Smart casting here instead of forcing !!
                     val smartOldLines = oldLines
                     val smartNewLines = newLines
@@ -132,48 +106,32 @@ class TranscribeAccessibilityService : AccessibilityService() {
                         if (oldElement != newElement) {
 //                            Log.d(TAG, "Generating")
                             Log.d(TAG, "GENERATING: $curElement")
-//                            sendMessage(curElement, "GEN")
                             oldLines = newLines
 
-                        // Because oldElement is different, this means the ASR has added a new line
-                        // because it finished generating text, meaning we know it is finished.
+                            // Because oldElement is different, this means the ASR has added a new line
+                            // because it finished generating text, meaning we know it is finished.
                         } else {
                             oldLines = newLines
                             // Log the final line item
                             Log.d(TAG, "FINALIZATION: $oldElement\n\n")
                             Log.d(TAG, "NEXT GENERATION: $curElement")
-//                            sendMessage(curElement, "FIN")
                         }
-                    // This occurs when oldLines doesn't have enough lines (2) for us to compare to
-                    // know if we are still generating a line, or finalized.
+                        // This occurs when oldLines doesn't have enough lines (2) for us to compare to
+                        // know if we are still generating a line, or finalized.
                     } else {
                         // new becomes old, update string list oldLines
                         oldLines = newLines
                         Log.d(TAG, "PREV < 2: ${newLines?.lastOrNull()}")
-                        sendMessage(newLines?.lastOrNull(), "GEN")
                     }
-                // This happens typically right at the start of extraction when there's no text.
-                // Just send last line, or NULL, of newLines.
-                } else{
+                    // This happens typically right at the start of extraction when there's no text.
+                    // Just send last line, or NULL, of newLines.
+                } else {
                     oldLines = newLines
                     Log.d(TAG, "NO PREV: ${newLines?.lastOrNull()}")
-//                    sendMessage(newLines?.lastOrNull(), "GEN")
                 }
             }
         } else {
             Log.d(TAG, "No text node found with non-empty content.")
-        }
-    }
-    // This helps reduce redundant json packaging code by making it a function.
-    private fun sendMessage(content: String?, flag: String) {
-        content?.let {
-            val jsonMessage = """
-                {
-                    "flag": "$flag",
-                    "content": "$content"
-                }
-            """.trimIndent()
-            webSocket.send(jsonMessage)
         }
     }
 
@@ -198,35 +156,6 @@ class TranscribeAccessibilityService : AccessibilityService() {
                 return foundNode // Return the found node if any
             }
         }
-
         return null // Return null if no matching node is found
-    }
-
-    // WebSocketListener to handle WebSocket events
-    private inner class WebSocketListenerImpl : WebSocketListener() {
-        // Called when the WebSocket connection is opened
-        override fun onOpen(webSocket: WebSocket, response: okhttp3.Response) {
-            Log.d(TAG, "WebSocket connection opened.")
-        }
-
-        // Called when a text message is received from the WebSocket server
-        override fun onMessage(webSocket: WebSocket, text: String) {
-            Log.d(TAG, "Receiving message: $text")
-        }
-
-        // Called when a binary message is received from the WebSocket server
-        override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
-            Log.d(TAG, "Receiving bytes: $bytes")
-        }
-
-        // Called when the WebSocket connection is closed
-        override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-            Log.d(TAG, "WebSocket connection closed: $reason")
-        }
-
-        // Called when the WebSocket connection fails
-        override fun onFailure(webSocket: WebSocket, t: Throwable, response: okhttp3.Response?) {
-            Log.e(TAG, "WebSocket failure: ${t.message}")
-        }
     }
 }
