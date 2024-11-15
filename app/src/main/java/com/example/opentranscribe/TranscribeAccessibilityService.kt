@@ -132,7 +132,7 @@ class TranscribeAccessibilityService : AccessibilityService() {
                         if (oldElement != newElement) {
 //                            Log.d(TAG, "Generating")
                             Log.d(TAG, "GENERATING: $curElement")
-                            sendMessage(curElement, "GEN")
+//                            sendMessage(curElement, "GEN")
                             oldLines = newLines
 
                         // Because oldElement is different, this means the ASR has added a new line
@@ -142,7 +142,7 @@ class TranscribeAccessibilityService : AccessibilityService() {
                             // Log the final line item
                             Log.d(TAG, "FINALIZATION: $oldElement\n\n")
                             Log.d(TAG, "NEXT GENERATION: $curElement")
-                            sendMessage(curElement, "FIN")
+//                            sendMessage(curElement, "FIN")
                         }
                     // This occurs when oldLines doesn't have enough lines (2) for us to compare to
                     // know if we are still generating a line, or finalized.
@@ -157,7 +157,7 @@ class TranscribeAccessibilityService : AccessibilityService() {
                 } else{
                     oldLines = newLines
                     Log.d(TAG, "NO PREV: ${newLines?.lastOrNull()}")
-                    sendMessage(newLines?.lastOrNull(), "GEN")
+//                    sendMessage(newLines?.lastOrNull(), "GEN")
                 }
             }
         } else {

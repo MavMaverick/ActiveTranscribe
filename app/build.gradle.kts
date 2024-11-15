@@ -62,4 +62,6 @@ dependencies {
 
     // Optionally, you may add a JSON parsing library, e.g., Moshi for handling structured data
     implementation("com.squareup.moshi:moshi:1.12.0")
+    // ActiveLook SDK
+    implementation("com.github.activelook:android-sdk:4.5.5")
 }
