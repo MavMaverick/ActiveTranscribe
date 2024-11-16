@@ -105,29 +105,38 @@ class TranscribeAccessibilityService : AccessibilityService() {
                         // so we know it is still generating.
                         if (oldElement != newElement) {
 //                            Log.d(TAG, "Generating")
-                            Log.d(TAG, "GENERATING: $curElement")
+//                            Log.d(TAG, "GENERATING: $curElement")
                             oldLines = newLines
+                            DisplayManager.asrTextStreamDisplay?.processASRMessage("GEN", curElement)
 
                             // Because oldElement is different, this means the ASR has added a new line
                             // because it finished generating text, meaning we know it is finished.
                         } else {
                             oldLines = newLines
                             // Log the final line item
-                            Log.d(TAG, "FINALIZATION: $oldElement\n\n")
-                            Log.d(TAG, "NEXT GENERATION: $curElement")
+//                            Log.d(TAG, "FINALIZATION: $oldElement\n\n")
+//                            Log.d(TAG, "NEXT GENERATION: $curElement")
+                            DisplayManager.asrTextStreamDisplay?.processASRMessage("FIN", curElement)
                         }
                         // This occurs when oldLines doesn't have enough lines (2) for us to compare to
                         // know if we are still generating a line, or finalized.
                     } else {
                         // new becomes old, update string list oldLines
                         oldLines = newLines
-                        Log.d(TAG, "PREV < 2: ${newLines?.lastOrNull()}")
+//                        Log.d(TAG, "PREV < 2: ${newLines?.lastOrNull()}")
+                        // Pass the last line of `newLines` to `processASRMessage` if it exists.
+                        // If `newLines?.lastOrNull()` is null (e.g., if `newLines` is empty),
+                        // we provide a default empty string ("") to ensure `processASRMessage`
+                        // always receives a non-null String, as expected by its parameters.
+                        DisplayManager.asrTextStreamDisplay?.processASRMessage("GEN", newLines?.lastOrNull() ?: "")
                     }
                     // This happens typically right at the start of extraction when there's no text.
                     // Just send last line, or NULL, of newLines.
                 } else {
                     oldLines = newLines
-                    Log.d(TAG, "NO PREV: ${newLines?.lastOrNull()}")
+//                    Log.d(TAG, "NO PREV: ${newLines?.lastOrNull()}")
+                    DisplayManager.asrTextStreamDisplay?.processASRMessage("GEN", newLines?.lastOrNull() ?: "")
+
                 }
             }
         } else {

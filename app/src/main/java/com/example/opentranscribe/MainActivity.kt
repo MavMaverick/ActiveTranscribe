@@ -71,16 +71,16 @@ class MainActivity : ComponentActivity() {
                 { glasses ->
                     Log.e("CONNECT", "Glasses connecting")
                     glasses.clear()
-                    // Display a test message on the glasses
-                    glasses.txt(Point(1, 50), Rotation.TOP_LR, 0x00.toByte(), 0xFF.toByte(), "Mon Super Test")
+                    // Initialize ASRTextStreamDisplay and store it in DisplayManager
+                    DisplayManager.asrTextStreamDisplay = ASRTextStreamDisplay(glasses)
                     Log.e("CONNECT", "Glasses connected")
-                    // Draw a circle at the center of the screen
                 },
                 { error ->
                     Log.e("ERROR", "Glasses could not be connected")
                 },
                 {
                     Log.e("DISCONNECT", "Glasses have been disconnected")
+                    DisplayManager.asrTextStreamDisplay = null // Clear the display reference
                 }
             )
         }
