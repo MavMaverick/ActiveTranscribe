@@ -45,12 +45,15 @@ fun wrapper(words: String, maxCharLimit: Int): List<String> {
 
     while (remainingText.isNotEmpty()) {
         val (line, rest) = splitStringAtSpace(remainingText, maxCharLimit)
-        lines.add(line)
+        // Add underscores to the end of the line if it's shorter than maxCharLimit
+        val paddedLine = line.padEnd(maxCharLimit, '_')
+        lines.add(paddedLine)
         remainingText = rest
     }
 
     return lines
 }
+
 
 //fun main() {
 //    val text = "This Supercalifragilisticexpialidocious. is a sample string that needs to be split into multiple lines."

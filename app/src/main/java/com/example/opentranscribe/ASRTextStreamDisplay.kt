@@ -9,8 +9,8 @@ class ASRTextStreamDisplay(private val glasses: Glasses) {
 
     private val finalizedLines = mutableListOf<String>() // Store finalized lines
     private var activeBlock: String = "" // Current block being generated
-    private val maxLinesOnScreen: Int = 4 // Maximum number of visual lines
-    private val maxFinalizedLines: Int = 5 // Maximum stored finalized lines
+    private val maxLinesOnScreen: Int = 6 // Maximum number of visual lines
+    private val maxFinalizedLines: Int = 7 // Maximum stored finalized lines
     private val lineSpacing: Int = 19 // Spacing for each line
     private var yOffsetStart: Int = 25 // Starting y-coordinate for rendering
 
@@ -22,9 +22,9 @@ class ASRTextStreamDisplay(private val glasses: Glasses) {
     fun processASRMessage(status: String, text: String) {
         if (status == "FIN") {
             // Wrap and add active block to finalized lines, then reset active block
-            val wrappedActiveBlock = wrapper(activeBlock, maxCharLimit = 29)
+            val wrappedActiveBlock = wrapper(activeBlock, maxCharLimit = 26)
             finalizedLines.addAll(wrappedActiveBlock)
-            finalizedLines.add("") // Add a blank line as a separator
+            finalizedLines.add("__________________________") // Add a blank line as a separator
             activeBlock = text // Start a new active block
 
             // Trim finalized lines to max limit
@@ -60,7 +60,7 @@ class ASRTextStreamDisplay(private val glasses: Glasses) {
         }
 
         // Clear the display
-        glasses.clear()
+//        glasses.clear()
 
         // Start rendering from the bottom of the screen
         var yOffset = 160
