@@ -49,11 +49,16 @@ class ASRTextStreamDisplay(private val glasses: Glasses) {
         val displayLines = finalizedLines.toMutableList()
         if (activeBlock.isNotEmpty()) {
             // Wrap and add active block lines in the correct order
-            displayLines.addAll(wrapper(activeBlock, maxCharLimit = 29))
+            displayLines.addAll(wrapper(activeBlock, maxCharLimit = 26))
         }
+
+        // Start rendering from the bottom of the screen
+        var yOffset = 160
+        var isFlagSet: Boolean = false
 
         // Apply scrolling logic: only show the last `maxLinesOnScreen` lines
         val trimmedDisplayLines = if (displayLines.size > maxLinesOnScreen) {
+            isFlagSet = true
             displayLines.takeLast(maxLinesOnScreen)
         } else {
             displayLines
@@ -62,23 +67,40 @@ class ASRTextStreamDisplay(private val glasses: Glasses) {
         // Clear the display
 //        glasses.clear()
 
-        // Start rendering from the bottom of the screen
-        var yOffset = 160
+        if (isFlagSet) { // set because buffer overflow, need shift and print all lines
+            // Render the lines in the correct sequence for downward printing
+            for (line in trimmedDisplayLines) { // Remove reversed() here
 
-        // Render the lines in the correct sequence for downward printing
-        for (line in trimmedDisplayLines) { // Remove reversed() here
-            Log.d(TAG, "Printing Line")
-            glasses.txt(
-                280.toShort(), // Adjusted X-coordinate to align text
-                yOffset.toShort(), // Y-coordinate for text (starts from the bottom and moves upward)
-                com.activelook.activelooksdk.types.Rotation.TOP_LR,
-                0x01.toByte(), // Font size (as Byte)
-                0xFF.toByte(), // Yellow color (as Byte)
-                line
-            )
-            yOffset -= lineSpacing + 5 // Decrement Y-coordinate for the next line
+                glasses.txt(
+                    280.toShort(), // Adjusted X-coordinate to align text
+                    yOffset.toShort(), // Y-coordinate for text (starts from the bottom and moves upward)
+                    com.activelook.activelooksdk.types.Rotation.TOP_LR,
+                    0x01.toByte(), // Font size (as Byte)
+                    0xFF.toByte(), // Yellow color (as Byte)
+                    line
+                )
+                yOffset -= lineSpacing + 5 // Decrement Y-coordinate for the next line
+            }
+        } else { // not set because no overflow, don't need to print all lines every change
+            for ((index, line) in trimmedDisplayLines.withIndex()) {
+
+                // Check if this is the last item in the list
+                if (index == trimmedDisplayLines.lastIndex) {
+                    // Call glasses.txt only for the last item
+                    glasses.txt(
+                        280.toShort(), // Adjusted X-coordinate to align text
+                        yOffset.toShort(), // Y-coordinate for text (starts from the bottom and moves upward)
+                        com.activelook.activelooksdk.types.Rotation.TOP_LR,
+                        0x01.toByte(), // Font size (as Byte)
+                        0xFF.toByte(), // Yellow color (as Byte)
+                        line
+                    )
+                }
+
+                yOffset -= lineSpacing + 5 // Decrement Y-coordinate for the next line
+            }
+
         }
     }
-
 }
 
