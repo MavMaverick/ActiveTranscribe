@@ -1,4 +1,4 @@
-package com.example.opentranscribe.ui.theme
+package com.example.opentranscribe.util
 
 import android.content.Context
 import android.util.Log

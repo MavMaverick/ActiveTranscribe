@@ -1,10 +1,11 @@
-package com.example.opentranscribe
+package com.example.opentranscribe.accessibility
 
 // Importing necessary Android and OkHttp libraries
 import android.accessibilityservice.AccessibilityService
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import com.example.opentranscribe.display.DisplayManager
 
 class TranscribeAccessibilityService : AccessibilityService() {
 

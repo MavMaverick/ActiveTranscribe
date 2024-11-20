@@ -1,4 +1,4 @@
-package com.example.opentranscribe.ui.theme
+package com.example.opentranscribe.ui.components
 
 import android.content.Intent
 import android.provider.Settings
@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Alignment
+import com.example.opentranscribe.util.clearAppCache
 
 
 @Composable

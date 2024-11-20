@@ -1,9 +1,7 @@
-package com.example.opentranscribe
+package com.example.opentranscribe.display
 
-import android.util.Log
 import com.activelook.activelooksdk.Glasses
-import com.example.opentranscribe.TranscribeAccessibilityService.Companion.TAG
-import com.example.opentranscribe.ui.theme.wrapper
+import com.example.opentranscribe.util.wrapper
 
 class ASRTextStreamDisplay(private val glasses: Glasses) {
 

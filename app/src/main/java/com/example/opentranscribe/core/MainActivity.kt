@@ -1,7 +1,6 @@
-package com.example.opentranscribe
+package com.example.opentranscribe.core
 
 import android.Manifest
-import android.graphics.Point
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -12,8 +11,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
 import com.activelook.activelooksdk.Sdk
-import com.activelook.activelooksdk.types.Rotation
-import com.example.opentranscribe.ui.theme.MainScreen
+import com.example.opentranscribe.display.ASRTextStreamDisplay
+import com.example.opentranscribe.display.DisplayManager
+import com.example.opentranscribe.ui.screens.MainScreen
 import com.example.opentranscribe.ui.theme.OpenTranscribeTheme
 
 class MainActivity : ComponentActivity() {
