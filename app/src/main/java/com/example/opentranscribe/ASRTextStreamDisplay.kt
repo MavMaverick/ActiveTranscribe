@@ -12,7 +12,6 @@ class ASRTextStreamDisplay(private val glasses: Glasses) {
     private val maxLinesOnScreen: Int = 6 // Maximum number of visual lines
     private val maxFinalizedLines: Int = 7 // Maximum stored finalized lines
     private val lineSpacing: Int = 19 // Spacing for each line
-    private var yOffsetStart: Int = 25 // Starting y-coordinate for rendering
 
     /**
      * Process incoming ASR message and update the buffer.
@@ -24,6 +23,8 @@ class ASRTextStreamDisplay(private val glasses: Glasses) {
             // Wrap and add active block to finalized lines, then reset active block
             val wrappedActiveBlock = wrapper(activeBlock, maxCharLimit = 26)
             finalizedLines.addAll(wrappedActiveBlock)
+            // Until a monospace font is added, use '_' not " ", " " uses too little space to
+            // clear text by overlapping.
             finalizedLines.add("__________________________") // Add a blank line as a separator
             activeBlock = text // Start a new active block
 
@@ -54,7 +55,7 @@ class ASRTextStreamDisplay(private val glasses: Glasses) {
 
         // Start rendering from the bottom of the screen
         var yOffset = 160
-        var isFlagSet: Boolean = false
+        var isFlagSet = false
 
         // Apply scrolling logic: only show the last `maxLinesOnScreen` lines
         val trimmedDisplayLines = if (displayLines.size > maxLinesOnScreen) {
@@ -63,9 +64,6 @@ class ASRTextStreamDisplay(private val glasses: Glasses) {
         } else {
             displayLines
         }
-
-        // Clear the display
-//        glasses.clear()
 
         if (isFlagSet) { // set because buffer overflow, need shift and print all lines
             // Render the lines in the correct sequence for downward printing
@@ -91,7 +89,7 @@ class ASRTextStreamDisplay(private val glasses: Glasses) {
                         280.toShort(), // Adjusted X-coordinate to align text
                         yOffset.toShort(), // Y-coordinate for text (starts from the bottom and moves upward)
                         com.activelook.activelooksdk.types.Rotation.TOP_LR,
-                        0x01.toByte(), // Font size (as Byte)
+                        0x01.toByte(), // Font size (as Byte
                         0xFF.toByte(), // Yellow color (as Byte)
                         line
                     )
@@ -99,7 +97,6 @@ class ASRTextStreamDisplay(private val glasses: Glasses) {
 
                 yOffset -= lineSpacing + 5 // Decrement Y-coordinate for the next line
             }
-
         }
     }
 }
