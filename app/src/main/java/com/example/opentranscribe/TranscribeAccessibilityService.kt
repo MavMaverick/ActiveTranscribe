@@ -70,15 +70,20 @@ class TranscribeAccessibilityService : AccessibilityService() {
                 // because we to to be able to compare to know if the ASR is still generating, or
                 // if it has finished.
                 if (oldLines != null && newLines != null) {
+
                     // Smart casting here instead of forcing !!
                     val smartOldLines = oldLines
                     val smartNewLines = newLines
+
                     // if two or more smartOldLines exist
-                    if (smartOldLines != null && smartOldLines.size >= 2 && smartNewLines != null) {
-//                        Log.d(TAG, "IF CHECK PASSED")
+                    if (smartOldLines != null && smartOldLines.size >= 2 && smartNewLines != null && smartNewLines.size >= 2) {
+
                         val oldElement = smartOldLines[smartOldLines.size - 1]
+//                        Log.d(TAG, "PASSED 1")
                         val newElement = smartNewLines[smartNewLines.size - 2]
+//                        Log.d(TAG, "PASSED 2")
                         val curElement = smartNewLines[smartNewLines.size - 1]
+//                        Log.d(TAG, "PASSED 3")
                         /*
                                     oldLines (last three lines as of previous extraction)
                         [-2] Sure. Sounds good. What time do you have in mind?
@@ -105,18 +110,20 @@ class TranscribeAccessibilityService : AccessibilityService() {
                         // so we know it is still generating.
                         if (oldElement != newElement) {
 //                            Log.d(TAG, "Generating")
-//                            Log.d(TAG, "GENERATING: $curElement")
+                            Log.d(TAG, "GENERATING: $curElement")
                             oldLines = newLines
-                            DisplayManager.asrTextStreamDisplay?.processASRMessage("GEN", curElement)
+                            DisplayManager.asrTextStreamDisplay?.processASRMessage(
+                                "GEN", curElement)
 
                             // Because oldElement is different, this means the ASR has added a new line
                             // because it finished generating text, meaning we know it is finished.
                         } else {
                             oldLines = newLines
                             // Log the final line item
-//                            Log.d(TAG, "FINALIZATION: $oldElement\n\n")
-//                            Log.d(TAG, "NEXT GENERATION: $curElement")
-                            DisplayManager.asrTextStreamDisplay?.processASRMessage("FIN", curElement)
+                            Log.d(TAG, "FINALIZATION: $oldElement\n\n")
+                            Log.d(TAG, "NEXT GENERATION: $curElement")
+                            DisplayManager.asrTextStreamDisplay?.processASRMessage(
+                                "FIN", curElement)
                         }
                         // This occurs when oldLines doesn't have enough lines (2) for us to compare to
                         // know if we are still generating a line, or finalized.
@@ -128,14 +135,16 @@ class TranscribeAccessibilityService : AccessibilityService() {
                         // If `newLines?.lastOrNull()` is null (e.g., if `newLines` is empty),
                         // we provide a default empty string ("") to ensure `processASRMessage`
                         // always receives a non-null String, as expected by its parameters.
-                        DisplayManager.asrTextStreamDisplay?.processASRMessage("GEN", newLines?.lastOrNull() ?: "")
+                        DisplayManager.asrTextStreamDisplay?.processASRMessage(
+                            "GEN", newLines?.lastOrNull() ?: "")
                     }
                     // This happens typically right at the start of extraction when there's no text.
                     // Just send last line, or NULL, of newLines.
                 } else {
                     oldLines = newLines
 //                    Log.d(TAG, "NO PREV: ${newLines?.lastOrNull()}")
-                    DisplayManager.asrTextStreamDisplay?.processASRMessage("GEN", newLines?.lastOrNull() ?: "")
+                    DisplayManager.asrTextStreamDisplay?.processASRMessage(
+                        "GEN", newLines?.lastOrNull() ?: "")
 
                 }
             }
