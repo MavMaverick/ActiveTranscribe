@@ -52,31 +52,38 @@ class MainActivity : ComponentActivity() {
         // Run SDK initialization and start scanning for glasses
         Sdk.init(
             this,
-            { gu -> Log.d("GLASSES_UPDATE", "onUpdateStart               : $gu") },
-            { gu_f ->
-                Log.d("GLASSES_UPDATE", "onUpdateAvailableCallback   : ${gu_f.first}")
-                gu_f.second.run()
+            { glassesUpdateStart ->
+                Log.d("GLASSES_UPDATE","onUpdateStart: $glassesUpdateStart")
             },
-            { gu -> Log.d("GLASSES_UPDATE", "onUpdateProgress            : $gu") },
-            { gu -> Log.d("GLASSES_UPDATE", "onUpdateSuccess             : $gu") },
-            { gu -> Log.d("GLASSES_UPDATE", "onUpdateError               : $gu") }
+            { updateInfo ->
+                Log.d("GLASSES_UPDATE", "onUpdateAvailableCallback: ${updateInfo.first}")
+                updateInfo.second.run()
+            },
+            { updateProgress ->
+                Log.d("GLASSES_UPDATE","onUpdateProgress: $updateProgress")
+            },
+            { updateSuccess ->
+                Log.d("GLASSES_UPDATE","onUpdateSuccess: $updateSuccess")
+            },
+            { updateError -> Log.d("GLASSES_UPDATE", "onUpdateError: $updateError") }
         )
 
         // Start scanning for ActiveLook glasses
-        Sdk.getInstance().startScan { discoveredGlasses ->
-            Log.e("DISCOVER", "Glasses connecting: ${discoveredGlasses.address}")
+        Sdk.getInstance().startScan { discoveredDevice ->
+            Log.e("DISCOVER", "Glasses connecting: ${discoveredDevice.address}")
 
             // Attempt to connect to the glasses
-            discoveredGlasses.connect(
-                { glasses ->
+            discoveredDevice.connect(
+                { connectedGlasses ->
                     Log.e("CONNECT", "Glasses connecting")
-                    glasses.clear()
+                    // Clear display for clean slate
+                    connectedGlasses.clear()
                     // Initialize ASRTextStreamDisplay and store it in DisplayManager
-                    DisplayManager.asrTextStreamDisplay = ASRTextStreamDisplay(glasses)
+                    DisplayManager.asrTextStreamDisplay = ASRTextStreamDisplay(connectedGlasses)
                     Log.e("CONNECT", "Glasses connected")
                 },
-                { error ->
-                    Log.e("ERROR", "Glasses could not be connected")
+                { connectionError ->
+                    Log.e("ERROR", "Glasses could not be connected: $connectionError")
                 },
                 {
                     Log.e("DISCONNECT", "Glasses have been disconnected")
