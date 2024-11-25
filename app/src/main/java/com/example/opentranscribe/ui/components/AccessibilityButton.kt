@@ -22,7 +22,7 @@ fun AccessibilityButton() {
     val context = LocalContext.current
 
     Row(
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         // Button to open Accessibility Settings
         Button(
@@ -31,8 +31,8 @@ fun AccessibilityButton() {
                 context.startActivity(intent)
             },
             modifier = Modifier
-                .width(200.dp)
-                .height(200.dp)
+                .width(120.dp)
+                .height(60.dp)
         ) {
             Text("Turn on")
         }
@@ -45,10 +45,24 @@ fun AccessibilityButton() {
                 clearAppCache(context)
             },
             modifier = Modifier
-                .width(200.dp)
+                .width(120.dp)
                 .height(60.dp)
         ) {
             Text("Clear Cache")
+        }
+
+        Spacer(modifier = Modifier.size(16.dp)) // Spacer between buttons
+
+        // Button to clear display
+        Button(
+            onClick = {
+                clearAppCache(context)
+            },
+            modifier = Modifier
+                .width(120.dp)
+                .height(60.dp)
+        ) {
+            Text("Clear Display")
         }
     }
 }

@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -13,8 +14,9 @@ import androidx.core.app.ActivityCompat
 import com.activelook.activelooksdk.Sdk
 import com.example.opentranscribe.display.ASRTextStreamDisplay
 import com.example.opentranscribe.display.DisplayManager
-import com.example.opentranscribe.ui.screens.MainScreen
 import com.example.opentranscribe.ui.theme.OpenTranscribeTheme
+import androidx.compose.ui.Alignment
+import com.example.opentranscribe.ui.components.AccessibilityButton
 
 class MainActivity : ComponentActivity() {
 
@@ -38,15 +40,24 @@ class MainActivity : ComponentActivity() {
         // Initialize the SDK with update handling
         initializeActiveLookSDK()
 
-        // Set up Compose UI with OpenTranscribeTheme and MainScreen
+        // Set up Compose UI with OpenTranscribeTheme and directly include AccessibilityButton
         setContent {
             OpenTranscribeTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MainScreen(modifier = Modifier.padding(innerPadding))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        // AccessibilityButton.kt
+                        AccessibilityButton()
+                    }
                 }
             }
         }
     }
+
 
     private fun initializeActiveLookSDK() {
         // Run SDK initialization and start scanning for glasses
