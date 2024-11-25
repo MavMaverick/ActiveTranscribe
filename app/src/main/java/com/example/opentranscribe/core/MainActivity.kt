@@ -91,6 +91,7 @@ class MainActivity : ComponentActivity() {
                     connectedGlasses.clear()
                     // Initialize ASRTextStreamDisplay and store it in DisplayManager
                     DisplayManager.asrTextStreamDisplay = ASRTextStreamDisplay(connectedGlasses)
+                    DisplayManager.connectedGlasses = connectedGlasses // Update the new global variable
                     Log.e("CONNECT", "Glasses connected")
                 },
                 { connectionError ->
@@ -99,6 +100,7 @@ class MainActivity : ComponentActivity() {
                 {
                     Log.e("DISCONNECT", "Glasses have been disconnected")
                     DisplayManager.asrTextStreamDisplay = null // Clear the display reference
+                    DisplayManager.connectedGlasses = null // Clear the global variable
                 }
             )
         }

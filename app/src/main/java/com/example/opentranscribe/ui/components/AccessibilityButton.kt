@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Alignment
+import com.example.opentranscribe.display.DisplayManager
 import com.example.opentranscribe.util.clearAppCache
 
 
@@ -56,7 +57,8 @@ fun AccessibilityButton() {
         // Button to clear display
         Button(
             onClick = {
-                clearAppCache(context)
+//                clearAppCache(context)
+                DisplayManager.connectedGlasses?.clear() // Use the new global variable
             },
             modifier = Modifier
                 .width(120.dp)
