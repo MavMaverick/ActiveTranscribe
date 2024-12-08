@@ -83,6 +83,8 @@ class ASRTextStreamDisplay(private val glasses: Glasses) {
                 // Check if this is the last item in the list
                 if (index == trimmedDisplayLines.lastIndex) {
                     // Call glasses.txt only for the last item
+
+
                     glasses.txt(
                         280.toShort(), // Adjusted X-coordinate to align text
                         yOffset.toShort(), // Y-coordinate for text (starts from the bottom and moves upward)
